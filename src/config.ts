@@ -4,6 +4,8 @@ export interface Config {
   browser?: string;
   extensionVersion?: string;
   extensionPath?: string;
+  bridgePort?: number;
+  bridgeToken?: string;
 }
 
 export function readConfig(): Config {

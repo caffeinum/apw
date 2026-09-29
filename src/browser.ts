@@ -115,8 +115,43 @@ function buildExtension(config: { port: number; token: string }): void {
   );
 }
 
+export const SEARCH: Browser = {
+  id: "search",
+  name: "Search",
+  bin: "/Applications/Search.app/Contents/MacOS/Search",
+  profile: "",
+  dataPath: `${HOME}/Library/Application Support/Search`,
+  brewCask: "driceroland/tap/search",
+};
+
 export function installedBrowsers(): Browser[] {
-  return BROWSERS.filter(({ bin }) => exists(bin));
+  return [...BROWSERS, SEARCH].filter(({ bin }) => exists(bin));
+}
+
+const BRIDGE_MARKER = "/* apw-bridge */";
+const searchBackground = () => `${SEARCH.dataPath}/Extensions/${EXTENSION_ID}/${BACKGROUND}`;
+
+export function searchBridgeInstalled(config: { port: number; token: string }): boolean {
+  try {
+    return Deno.readTextFileSync(searchBackground()).includes(`self.APW_CONFIG = ${JSON.stringify(config)};`);
+  } catch {
+    return false;
+  }
+}
+
+export function installSearchBridge(config: { port: number; token: string }): void {
+  const background = searchBackground();
+  if (!exists(background)) {
+    throw new APWError(
+      Status.GENERIC_ERROR,
+      "iCloud Passwords extension not installed in Search. Install it from the Chrome Web Store in Search.",
+    );
+  }
+  const original = Deno.readTextFileSync(background).split(`\n${BRIDGE_MARKER}\n`)[0];
+  Deno.writeTextFileSync(
+    background,
+    `${original}\n${BRIDGE_MARKER}\nself.APW_CONFIG = ${JSON.stringify(config)};\n${bridgeSource}\n`,
+  );
 }
 
 async function debuggerUrl(port: number): Promise<string> {

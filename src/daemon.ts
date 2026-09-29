@@ -1,5 +1,6 @@
 import { APWError, DATA_PATH, SOCKET_PATH, Status } from "./const.ts";
-import { type Browser, launchBrowser } from "./browser.ts";
+import { type Browser, installSearchBridge, launchBrowser, SEARCH, searchBridgeInstalled } from "./browser.ts";
+import { readConfig, writeConfig } from "./config.ts";
 import type { APWResponse, Message } from "./types.ts";
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -137,10 +138,12 @@ export async function daemon(browser: Browser): Promise<void> {
   Deno.mkdirSync(DATA_PATH, { recursive: true, mode: 0o700 });
   Deno.chmodSync(DATA_PATH, 0o700);
 
-  const token = crypto.randomUUID();
+  const hosted = browser.id === SEARCH.id;
+  const bridge = hosted ? stableBridge() : { port: 0, token: crypto.randomUUID() };
+  const token = bridge.token;
   const session = new ExtensionSession(token);
 
-  const wsServer = Deno.serve({ hostname: "127.0.0.1", port: 0 }, (req) => {
+  const wsServer = Deno.serve({ hostname: "127.0.0.1", port: bridge.port }, (req) => {
     if (req.headers.get("upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
@@ -149,12 +152,16 @@ export async function daemon(browser: Browser): Promise<void> {
     return response;
   });
 
-  const child = await launchBrowser(browser, { port: (wsServer.addr as Deno.NetAddr).port, token });
-  console.info(`[apw] launched headless ${browser.name}; extension loaded.`);
+  const child = hosted ? null : await launchBrowser(browser, { port: (wsServer.addr as Deno.NetAddr).port, token });
+  if (hosted) {
+    ensureSearchBridge(bridge);
+  } else {
+    console.info(`[apw] launched headless ${browser.name}; extension loaded.`);
+  }
   const shutdown = async () => {
     try {
-      child.kill("SIGTERM");
-      await child.status;
+      child?.kill("SIGTERM");
+      await child?.status;
     } catch { /* ignore */ }
     Deno.exit(0);
   };
@@ -172,4 +179,18 @@ export async function daemon(browser: Browser): Promise<void> {
   for await (const conn of unixListener) {
     handleCliConnection(conn, session).catch(console.error);
   }
+}
+
+function stableBridge(): { port: number; token: string } {
+  const { bridgePort, bridgeToken } = readConfig();
+  if (bridgePort && bridgeToken) return { port: bridgePort, token: bridgeToken };
+  const bridge = { port: 20000 + Math.floor(Math.random() * 10000), token: crypto.randomUUID() };
+  writeConfig({ bridgePort: bridge.port, bridgeToken: bridge.token });
+  return bridge;
+}
+
+function ensureSearchBridge(bridge: { port: number; token: string }): void {
+  if (searchBridgeInstalled(bridge)) return;
+  installSearchBridge(bridge);
+  console.info("[apw] bridge installed into Search's iCloud Passwords extension; quit and reopen Search to load it");
 }

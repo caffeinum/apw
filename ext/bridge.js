@@ -50,6 +50,13 @@
       setTimeout(connect, 3000);
     };
     ws.onmessage = ({ data }) => request(JSON.parse(data));
+    const opening = ws;
+    setTimeout(() => {
+      if (opening !== ws || opening.readyState !== WebSocket.CONNECTING) return;
+      opening.onclose = opening.onerror = opening.onmessage = opening.onopen = null;
+      try { opening.close(); } catch { /* ignore */ }
+      connect();
+    }, 3000);
   }
   if (!g_nativeAppPort) connectToBackgroundNativeAppAndSetUpListeners();
   g_nativeAppPort?.onMessage?.addListener(reply);
