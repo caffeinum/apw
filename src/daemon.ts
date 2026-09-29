@@ -29,10 +29,6 @@ class ExtensionSession {
   }
 
   accept(ws: WebSocket): void {
-    if (this.ws) {
-      ws.close(4001, "Already connected");
-      return;
-    }
     ws.addEventListener("message", (event) => {
       let message: ExtensionMessage;
       try {
@@ -47,7 +43,9 @@ class ExtensionSession {
           ws.close(4003, "Unauthorized");
           return;
         }
+        const previous = this.ws;
         this.ws = ws;
+        previous?.close(4001, "Replaced by a newer connection");
         console.info("[apw] extension connected");
         return;
       }
@@ -61,6 +59,7 @@ class ExtensionSession {
     });
 
     ws.addEventListener("close", () => {
+      if (this.ws !== ws) return;
       this.ws = null;
       this.rejectPending(new Error("Extension disconnected"));
       console.info("[apw] extension disconnected");
