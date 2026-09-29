@@ -20,7 +20,9 @@ function browser(id: string, name: string, app: string, dataDir: string, brewCas
   return {
     id,
     name,
-    bin: `/Applications/${app}.app/Contents/MacOS/${app}`,
+    bin: [`/Applications`, `${HOME}/Applications`]
+      .map((dir) => `${dir}/${app}.app/Contents/MacOS/${app}`)
+      .find(exists) ?? `/Applications/${app}.app/Contents/MacOS/${app}`,
     profile: `${BROWSER_PROFILE_PATH}/${id}`,
     dataPath: `${HOME}/Library/Application Support/${dataDir}`,
     brewCask,
@@ -73,8 +75,10 @@ function copyDirectory(source: string, target: string): void {
   }
 }
 
+const EXTRA_EXTENSION_SOURCES = [`${HOME}/Library/Application Support/Dia/User Data`, `${HOME}/Library/Application Support/Arc/User Data`];
+
 function extensionSource(): string | undefined {
-  for (const { dataPath } of BROWSERS) {
+  for (const dataPath of [...BROWSERS.map((b) => b.dataPath), ...EXTRA_EXTENSION_SOURCES]) {
     for (const profile of directories(dataPath)) {
       const base = `${dataPath}/${profile}/Extensions/${EXTENSION_ID}`;
       const version = directories(base).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).at(-1);
