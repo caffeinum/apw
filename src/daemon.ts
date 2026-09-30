@@ -46,7 +46,7 @@ class ExtensionSession {
         const previous = this.ws;
         this.ws = ws;
         previous?.close(4001, "Replaced by a newer connection");
-        console.info("[apw] extension connected");
+        console.info(`${new Date().toISOString()} [apw] extension connected`);
         return;
       }
 
@@ -62,7 +62,7 @@ class ExtensionSession {
       if (this.ws !== ws) return;
       this.ws = null;
       this.rejectPending(new Error("Extension disconnected"));
-      console.info("[apw] extension disconnected");
+      console.info(`${new Date().toISOString()} [apw] extension disconnected`);
     });
   }
 
@@ -155,7 +155,7 @@ export async function daemon(browser: Browser): Promise<void> {
   if (hosted) {
     ensureSearchBridge(bridge);
   } else {
-    console.info(`[apw] launched headless ${browser.name}; extension loaded.`);
+    console.info(`${new Date().toISOString()} [apw] launched headless ${browser.name}; extension loaded.`);
   }
   const shutdown = async () => {
     try {
@@ -172,7 +172,7 @@ export async function daemon(browser: Browser): Promise<void> {
     if (!(error instanceof Deno.errors.NotFound)) throw error;
   }
   const unixListener = Deno.listen({ transport: "unix", path: SOCKET_PATH });
-  console.info(`[apw] Unix socket at ${SOCKET_PATH}`);
+  console.info(`${new Date().toISOString()} [apw] Unix socket at ${SOCKET_PATH}`);
   await Deno.chmod(SOCKET_PATH, 0o600);
 
   for await (const conn of unixListener) {
@@ -191,5 +191,5 @@ function stableBridge(): { port: number; token: string } {
 function ensureSearchBridge(bridge: { port: number; token: string }): void {
   if (searchBridgeInstalled(bridge)) return;
   installSearchBridge(bridge);
-  console.info("[apw] bridge installed into Search's iCloud Passwords extension; quit and reopen Search to load it");
+  console.info(`${new Date().toISOString()} [apw] bridge installed into Search's iCloud Passwords extension; quit and reopen Search to load it`);
 }
