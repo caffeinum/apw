@@ -1,0 +1,19 @@
+src/daemon.ts
+  s_fd1195a8e298b0::t_ea0f6dd8365b1f 49,65,158,175,194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9696af6d0ea93e6bf74f8ccce43d3d94fbcdf057",
+  "prompts": {},
+  "sessions": {
+    "s_fd1195a8e298b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86b77677-cc85-4fcf-8a3c-1c551feeb2a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Aleksey Bykhun <theisease@gmail.com>"
+    }
+  }
+}
