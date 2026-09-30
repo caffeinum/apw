@@ -1,0 +1,21 @@
+ext/bridge.js
+  s_fd1195a8e298b0::t_ca4dfe27ef6501 15,62-67,69
+src/browser.ts
+  s_fd1195a8e298b0::t_635bc3a94b488e 136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "dcbe8c631401e1a065dad163990d6cd77719f4be",
+  "prompts": {},
+  "sessions": {
+    "s_fd1195a8e298b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86b77677-cc85-4fcf-8a3c-1c551feeb2a3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Aleksey Bykhun <theisease@gmail.com>"
+    }
+  }
+}
