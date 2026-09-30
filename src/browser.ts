@@ -133,7 +133,7 @@ const searchBackground = () => `${SEARCH.dataPath}/Extensions/${EXTENSION_ID}/${
 
 export function searchBridgeInstalled(config: { port: number; token: string }): boolean {
   try {
-    return Deno.readTextFileSync(searchBackground()).includes(`self.APW_CONFIG = ${JSON.stringify(config)};`);
+    return Deno.readTextFileSync(searchBackground()).endsWith(`self.APW_CONFIG = ${JSON.stringify(config)};\n${bridgeSource}\n`);
   } catch {
     return false;
   }

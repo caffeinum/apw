@@ -12,6 +12,7 @@
     }
     if (g_theState !== "SessionKeySet") return fail(message.id, INVALID_SESSION, "unpaired");
     pending = { id: message.id, cmd: message.cmd };
+    hookNativePort();
     try {
       const SMSG = g_secretSession.createSMSG(JSON.stringify(message.body));
       g_nativeAppPort.postMessage({
@@ -58,7 +59,13 @@
       connect();
     }, 3000);
   }
+  const hooked = new WeakSet();
+  function hookNativePort() {
+    if (!g_nativeAppPort || hooked.has(g_nativeAppPort)) return;
+    g_nativeAppPort.onMessage.addListener(reply);
+    hooked.add(g_nativeAppPort);
+  }
   if (!g_nativeAppPort) connectToBackgroundNativeAppAndSetUpListeners();
-  g_nativeAppPort?.onMessage?.addListener(reply);
+  hookNativePort();
   connect();
 })();
